@@ -2,9 +2,12 @@ import React from 'react'
 import { Formik, Form, Field, ErrorMessage} from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { useHistory } from 'react-router-dom'
+
 
 function CreatePost() {
 
+    let history = useHistory();
     const initialValue = {
         title: "",
         postText: "",
@@ -13,7 +16,7 @@ function CreatePost() {
 
     const onSubmit = (data) => {
         axios.post('http://localhost:3001/posts', data).then((res) => {
-            console.log('Work')
+            history.push('/')
         })
     }
 
@@ -21,7 +24,7 @@ function CreatePost() {
         title: Yup.string().required("You mush input the title"),
         postText: Yup.string().required(),
         username:Yup.string().min(3).max(15).required() 
-    })
+    });
 
     return (
         <div className="createPostPage">
