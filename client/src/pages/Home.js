@@ -11,6 +11,9 @@ function Home() {
     useEffect(() => {
       axios.get('http://localhost:3001/posts').then((res) => {
         setListOfPost(res.data)
+        console.log(res.data)
+      }).catch((error) => {
+          console.log('cek',error)
       })
     }, [])
 
