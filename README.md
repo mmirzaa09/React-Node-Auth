@@ -1,4 +1,4 @@
-# React-Node-Auth
+# React-Node-FullStack
 Technologies:
 - ReactJS
 - NodeJS
