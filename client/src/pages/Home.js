@@ -1,20 +1,27 @@
-import React from 'react'
-import axios from 'axios'
+import React from 'react';
+import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom';
+import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
 
 function Home() {
 
     const [listOfPost, setListOfPost] = useState([]);
+    const [ likedPost, setLikedPost ] = useState([])
     let history = useHistory();
 
     useEffect(() => {
-      axios.get('http://localhost:3001/posts').then((res) => {
-        setListOfPost(res.data)
-        console.log(res.data)
-      }).catch((error) => {
-          console.log('cek',error)
-      })
+      axios.get('http://localhost:3001/posts', {
+        headers: { 
+            accessToken: localStorage.getItem('accessToken') 
+        }
+      }).then((res) => {
+        setListOfPost(res.data.listOfPost)
+        setLikedPost(res.data.likedPost.map((like) => {
+                return like.PostId;
+            })
+        );
+      });
     }, []);
 
     const LikeAPost = (postId) => {
@@ -26,21 +33,31 @@ function Home() {
             }
         })
         .then((response) => {
-            alert(response.data);
-            setListOfPost(listOfPost.map((post) => {
-                if(post.id === postId) {
-                    if(response.data.liked){
-                        return {...post, Likes: [...post.Likes, 0]};
+            // alert(response.data);
+            setListOfPost(
+                listOfPost.map((post) => {
+                    if(post.id === postId) {
+                        if(response.data.liked){
+                            return {...post, Likes: [...post.Likes, 0]};
+                        } else {
+                            const likeArray = post.Likes
+                            likeArray.pop()
+                            return {...post, Likes: likeArray};
+                        }
                     } else {
-                        const likeArray = post.Likes
-                        likeArray.pop()
-                        return {...post, Likes: likeArray};
+                        return post;
                     }
-                } else {
-                    return post
-                }
-            }))
-        })
+                })
+            );
+
+            if(likedPost.includes(postId)) {
+                setLikedPost(likedPost.filter((id) => {
+                    return id !== postId;
+                }))
+            } else {
+                setLikedPost([...likedPost, postId])
+            }
+        });
     };
 
     return (
@@ -59,11 +76,15 @@ function Home() {
                         }}
                     >{value.postText}</div>
                     <div className="footer">
-                        {value.username} {""}
-                        <button onClick={() => {LikeAPost(value.id)}}>
-                            {""}
-                            Like
-                        </button>
+                        <div className="username">{value.username}</div>
+                        <div className="buttons">
+                            <ThumbUpAltIcon
+                                onClick={() => {
+                                    LikeAPost(value.id)
+                                }}
+                                className={likedPost.includes(value.id) ? "unlikeBttn" : "likeBttn"}
+                            />
+                        </div>
                         <label>{value.Likes.length}</label>
                     </div>
                 </div>
