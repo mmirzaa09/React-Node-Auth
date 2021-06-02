@@ -1,27 +1,33 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
+import { AuthContext } from '../helpers/AuthContext';
 
 function Home() {
 
     const [listOfPost, setListOfPost] = useState([]);
     const [ likedPost, setLikedPost ] = useState([])
+    const { authState } = useContext(AuthContext);
     let history = useHistory();
 
     useEffect(() => {
-      axios.get('http://localhost:3001/posts', {
-        headers: { 
-            accessToken: localStorage.getItem('accessToken') 
+
+        if(!localStorage.getItem('accessToken')){
+            history.push('/login')
+        } else {
+            axios.get('http://localhost:3001/posts', {
+                headers: { 
+                    accessToken: localStorage.getItem('accessToken') 
+                }
+            }).then((res) => {
+                setListOfPost(res.data.listOfPost)
+                setLikedPost(res.data.likedPost.map((like) => {
+                        return like.PostId;
+                    })
+                );
+            });
         }
-      }).then((res) => {
-        setListOfPost(res.data.listOfPost)
-        setLikedPost(res.data.likedPost.map((like) => {
-                return like.PostId;
-            })
-        );
-      });
     }, []);
 
     const LikeAPost = (postId) => {
