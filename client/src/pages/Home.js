@@ -2,6 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom'
+import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
 
 function Home() {
 
@@ -59,9 +60,8 @@ function Home() {
                         }}
                     >{value.postText}</div>
                     <div className="footer">
-                        {value.username} {""}
+                        {value.username}
                         <button onClick={() => {LikeAPost(value.id)}}>
-                            {""}
                             Like
                         </button>
                         <label>{value.Likes.length}</label>
