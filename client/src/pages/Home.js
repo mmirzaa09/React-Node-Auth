@@ -1,21 +1,33 @@
-import React from 'react'
-import axios from 'axios'
-import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react';
+import axios from 'axios';
+import { useHistory, Link } from 'react-router-dom';
 import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
+import { AuthContext } from '../helpers/AuthContext';
 
 function Home() {
 
     const [listOfPost, setListOfPost] = useState([]);
+    const [ likedPost, setLikedPost ] = useState([])
+    const { authState } = useContext(AuthContext);
     let history = useHistory();
 
     useEffect(() => {
-      axios.get('http://localhost:3001/posts').then((res) => {
-        setListOfPost(res.data)
-        console.log(res.data)
-      }).catch((error) => {
-          console.log('cek',error)
-      })
+
+        if(!localStorage.getItem('accessToken')){
+            history.push('/login')
+        } else {
+            axios.get('http://localhost:3001/posts', {
+                headers: { 
+                    accessToken: localStorage.getItem('accessToken') 
+                }
+            }).then((res) => {
+                setListOfPost(res.data.listOfPost)
+                setLikedPost(res.data.likedPost.map((like) => {
+                        return like.PostId;
+                    })
+                );
+            });
+        }
     }, []);
 
     const LikeAPost = (postId) => {
@@ -27,21 +39,31 @@ function Home() {
             }
         })
         .then((response) => {
-            alert(response.data);
-            setListOfPost(listOfPost.map((post) => {
-                if(post.id === postId) {
-                    if(response.data.liked){
-                        return {...post, Likes: [...post.Likes, 0]};
+            // alert(response.data);
+            setListOfPost(
+                listOfPost.map((post) => {
+                    if(post.id === postId) {
+                        if(response.data.liked){
+                            return {...post, Likes: [...post.Likes, 0]};
+                        } else {
+                            const likeArray = post.Likes
+                            likeArray.pop()
+                            return {...post, Likes: likeArray};
+                        }
                     } else {
-                        const likeArray = post.Likes
-                        likeArray.pop()
-                        return {...post, Likes: likeArray};
+                        return post;
                     }
-                } else {
-                    return post
-                }
-            }))
-        })
+                })
+            );
+
+            if(likedPost.includes(postId)) {
+                setLikedPost(likedPost.filter((id) => {
+                    return id !== postId;
+                }))
+            } else {
+                setLikedPost([...likedPost, postId])
+            }
+        });
     };
 
     return (
@@ -60,10 +82,19 @@ function Home() {
                         }}
                     >{value.postText}</div>
                     <div className="footer">
-                        {value.username}
-                        <button onClick={() => {LikeAPost(value.id)}}>
-                            Like
-                        </button>
+                        <div className="username">
+                            <Link to={`/profile/${value.UserId}`}>
+                                {value.username}
+                            </Link>
+                        </div>
+                        <div className="buttons">
+                            <ThumbUpAltIcon
+                                onClick={() => {
+                                    LikeAPost(value.id)
+                                }}
+                                className={likedPost.includes(value.id) ? "unlikeBttn" : "likeBttn"}
+                            />
+                        </div>
                         <label>{value.Likes.length}</label>
                     </div>
                 </div>
